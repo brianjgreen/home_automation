@@ -110,11 +110,11 @@ def main():
     index = load_hash_index(args.archive_dir)
 
     # Faster directory scanning
-    for entry in os.scandir(args.import_dir):
-        if entry.is_file():
-            ext = Path(entry.name).suffix.lower()
+    for path in args.import_dir.rglob('*'):
+        if path.is_file():
+            ext = path.suffix.lower()
             if ext in supported_ext:
-                archive_photo(Path(entry.path), args.archive_dir, index, args.dry_run)
+                archive_photo(path, args.archive_dir, index, args.dry_run)
 
     save_hash_index(args.archive_dir, index, args.dry_run)
 
