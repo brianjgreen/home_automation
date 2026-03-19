@@ -51,7 +51,7 @@ def extract_exif_datetime(path: Path) -> Optional[datetime]:
                 return None
 
             for tag_id, value in exif.items():
-                if TAGS.get(tag_id) == "DateTimeOriginal":
+                if TAGS.get(tag_id) == "DateTimeOriginal" or TAGS.get(tag_id) == "DateTime":
                     try:
                         return datetime.strptime(value, "%Y:%m:%d %H:%M:%S")
                     except Exception:
