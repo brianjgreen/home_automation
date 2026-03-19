@@ -3,14 +3,14 @@
 import argparse
 import hashlib
 import json
-import os
 import shutil
-from pathlib import Path
+import subprocess
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
-from PIL import Image
-from PIL.ExifTags import TAGS
+# Note: This script requires Python 3.11+ for hashlib.file_digest and exiftool to be installed and in PATH.
+# sudo apt install libimage-exiftool-perl
 
 
 INDEX_FILENAME = ".photo_hash_index.json"
@@ -43,22 +43,18 @@ def compute_file_hash(path: Path) -> str:
         return hashlib.file_digest(f, "sha256").hexdigest()
 
 
+def heic_metadata(path):
+    result = subprocess.run(["exiftool", "-json", path], capture_output=True, text=True)
+    return json.loads(result.stdout)[0]
+
+
 def extract_exif_datetime(path: Path) -> Optional[datetime]:
-    try:
-        with Image.open(path) as img:
-            exif = img.getexif()
-            if not exif:
+    for tag_id, value in heic_metadata(path).items():
+        if tag_id == "DateTimeOriginal" or tag_id == "DateTime":
+            try:
+                return datetime.strptime(value, "%Y:%m:%d %H:%M:%S")
+            except Exception:
                 return None
-
-            for tag_id, value in exif.items():
-                if TAGS.get(tag_id) == "DateTimeOriginal" or TAGS.get(tag_id) == "DateTime":
-                    try:
-                        return datetime.strptime(value, "%Y:%m:%d %H:%M:%S")
-                    except Exception:
-                        return None
-    except Exception:
-        return None
-
     return None
 
 
@@ -99,9 +95,13 @@ def main():
     parser = argparse.ArgumentParser(
         description="Import photos and archive them by Year/Month with duplicate detection."
     )
-    parser.add_argument("import_dir", type=Path, help="Directory containing photos to import")
+    parser.add_argument(
+        "import_dir", type=Path, help="Directory containing photos to import"
+    )
     parser.add_argument("archive_dir", type=Path, help="Destination archive directory")
-    parser.add_argument("--dry-run", action="store_true", help="Simulate actions without copying files")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Simulate actions without copying files"
+    )
 
     args = parser.parse_args()
 
@@ -110,7 +110,7 @@ def main():
     index = load_hash_index(args.archive_dir)
 
     # Faster directory scanning
-    for path in args.import_dir.rglob('*'):
+    for path in args.import_dir.rglob("*"):
         if path.is_file():
             ext = path.suffix.lower()
             if ext in supported_ext:
