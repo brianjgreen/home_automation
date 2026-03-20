@@ -49,8 +49,9 @@ def heic_metadata(path):
 
 
 def extract_exif_datetime(path: Path) -> Optional[datetime]:
+    creation_tags = ["DateTimeOriginal", "CreateDate", "DateTime"]
     for tag_id, value in heic_metadata(path).items():
-        if tag_id == "DateTimeOriginal" or tag_id == "DateTime":
+        if tag_id in creation_tags:
             try:
                 return datetime.strptime(value, "%Y:%m:%d %H:%M:%S")
             except Exception:
@@ -105,16 +106,12 @@ def main():
 
     args = parser.parse_args()
 
-    supported_ext = {".jpg", ".jpeg", ".png", ".heic", ".heif", ".tiff"}
-
     index = load_hash_index(args.archive_dir)
 
     # Faster directory scanning
     for path in args.import_dir.rglob("*"):
         if path.is_file():
-            ext = path.suffix.lower()
-            if ext in supported_ext:
-                archive_photo(path, args.archive_dir, index, args.dry_run)
+            archive_photo(path, args.archive_dir, index, args.dry_run)
 
     save_hash_index(args.archive_dir, index, args.dry_run)
 
