@@ -54,10 +54,14 @@ def extract_exif_datetime(path: Path) -> Optional[datetime]:
         if tag_id in creation_tags:
             try:
                 return datetime.strptime(value, "%Y:%m:%d %H:%M:%S")
-            except Exception:
-                print(f"Warning: Failed to parse EXIF date '{value}' for {path}, skipping EXIF date. Error: {e}")
+            except Exception as e:
+                print(
+                    f"Warning: Failed to parse EXIF date '{value}' for {path}, skipping EXIF date. Error: {e}"
+                )
                 return None
-    print(f"Warning: No valid EXIF date found for {path}, falling back to file modification time.")
+    print(
+        f"Warning: No valid EXIF date found for {path}, falling back to file modification time."
+    )
     return None
 
 
