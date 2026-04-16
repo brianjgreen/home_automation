@@ -10,7 +10,8 @@ from pathlib import Path
 from typing import Optional
 
 # Note: This script requires Python 3.11+ for hashlib.file_digest and exiftool to be installed and in PATH.
-# sudo apt install libimage-exiftool-perl
+# Linux: sudo apt install libimage-exiftool-perl
+# Mac: https://exiftool.org/install.html#MacOS
 
 
 INDEX_FILENAME = ".photo_hash_index.json"
@@ -116,7 +117,7 @@ def main():
 
     # Faster directory scanning
     for path in args.import_dir.rglob("*"):
-        if path.is_file():
+        if path.is_file() and path.name != ".DS_Store":
             archive_photo(path, args.archive_dir, index, args.dry_run)
 
     save_hash_index(args.archive_dir, index, args.dry_run)
